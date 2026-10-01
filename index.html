@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Seteo del dron</title>
+<meta name="theme-color" content="#14532d">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Seteo dron">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+  :root {
+    --bg: #edf0ea;
+    --surface: #ffffff;
+    --ink: #10231a;
+    --muted: #4f6158;
+    --line: #c3cdc4;
+    --accent: #14532d;
+    --accent-ink: #ffffff;
+    --result-bg: #14532d;
+    --result-ink: #ffffff;
+    --result-soft: #b9dcc6;
+    --warn-bg: #ffedd5;
+    --warn-ink: #7c2d12;
+    --warn-line: #c2410c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e1511;
+      --surface: #17211b;
+      --ink: #eaf1ec;
+      --muted: #9db0a5;
+      --line: #2e3d33;
+      --accent: #7ed7a0;
+      --accent-ink: #0e1511;
+      --result-bg: #1c5b38;
+      --result-ink: #ffffff;
+      --result-soft: #b9dcc6;
+      --warn-bg: #3a1f0f;
+      --warn-ink: #fdba74;
+      --warn-line: #ea580c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e1511;
+    --surface: #17211b;
+    --ink: #eaf1ec;
+    --muted: #9db0a5;
+    --line: #2e3d33;
+    --accent: #7ed7a0;
+    --accent-ink: #0e1511;
+    --result-bg: #1c5b38;
+    --result-ink: #ffffff;
+    --result-soft: #b9dcc6;
+    --warn-bg: #3a1f0f;
+    --warn-ink: #fdba74;
+    --warn-line: #ea580c;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Avenir Next", "Segoe UI", Roboto, "Helvetica Neue", system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.45;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  main { max-width: 520px; margin: 0 auto; padding: 20px 16px 48px; }
+
+  h1 { font-size: 28px; line-height: 1.15; margin: 4px 0 6px; letter-spacing: -0.01em; }
+  h2 { font-size: 19px; margin: 0 0 12px; }
+  .lede { margin: 0 0 22px; color: var(--muted); }
+
+  section { margin-bottom: 30px; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 12px; }
+  .field label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 5px; }
+  .box { position: relative; }
+  .box input {
+    width: 100%;
+    height: 54px;
+    font: inherit;
+    font-size: 21px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    background: var(--surface);
+    border: 2px solid var(--line);
+    border-radius: 10px;
+    padding: 0 50px 0 12px;
+  }
+  .box input::placeholder { color: var(--muted); opacity: .55; font-weight: 400; }
+  .box input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  .unit {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    font-size: 13px; color: var(--muted); pointer-events: none;
+  }
+  .hint { font-size: 12.5px; color: var(--muted); margin: 4px 0 0; }
+
+  .result {
+    background: var(--result-bg);
+    color: var(--result-ink);
+    border-radius: 16px;
+    padding: 20px 18px 16px;
+    margin-bottom: 14px;
+  }
+  .r-label { margin: 0; font-size: 16px; color: var(--result-soft); }
+  .r-big { margin: 0; display: flex; align-items: baseline; gap: 8px; }
+  .r-num { font-size: 72px; line-height: 1.05; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .r-unit { font-size: 22px; color: var(--result-soft); }
+  .r-msg { margin: 6px 0 0; color: var(--result-soft); }
+  .rows { margin: 14px 0 0; padding: 0; border-top: 1px solid rgba(255,255,255,.25); }
+  .rows:empty { display: none; }
+  .row { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,.15); font-size: 15px; }
+  .row:last-child { border-bottom: 0; padding-bottom: 0; }
+  .row dt { color: var(--result-soft); }
+  .row dd { margin: 0; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+
+  .warn {
+    background: var(--warn-bg); color: var(--warn-ink);
+    border-left: 4px solid var(--warn-line);
+    padding: 10px 12px; border-radius: 6px; margin: 0 0 14px; font-size: 15px;
+  }
+  .warn[hidden] { display: none; }
+
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  button {
+    font: inherit; font-weight: 600; cursor: pointer;
+    min-height: 50px; padding: 0 18px; border-radius: 10px;
+    border: 2px solid var(--accent); background: transparent; color: var(--accent);
+  }
+  button.primary { background: var(--accent); color: var(--accent-ink); flex: 1 1 auto; }
+  button.quiet { border-color: transparent; color: var(--muted); text-decoration: underline; padding: 0 6px; }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  button:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-bottom: 10px; }
+  th, td { text-align: right; padding: 9px 4px; border-bottom: 1px solid var(--line); font-size: 15px; }
+  th { font-size: 13px; color: var(--muted); font-weight: 600; }
+  th:first-child, td:first-child { text-align: left; }
+  .empty { color: var(--muted); margin: 0 0 10px; }
+  .avg { margin: 4px 0 12px; font-weight: 600; }
+
+  .start-out { margin: 14px 0 0; font-size: 18px; }
+  .start-out strong { font-size: 30px; font-variant-numeric: tabular-nums; }
+  .small { font-size: 14px; color: var(--muted); }
+
+  details { border-top: 1px solid var(--line); padding-top: 14px; }
+  summary { cursor: pointer; font-weight: 600; }
+  details ul { padding-left: 20px; margin: 10px 0 0; }
+  details li { margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Seteo del dron</h1>
+    <p class="lede">Cargá la última medición y te dice en cuántos kg/ha setear para que la semilla alcance justo.</p>
+  </header>
+
+  <section aria-labelledby="t-med">
+    <h2 id="t-med">Medición</h2>
+    <div class="grid">
+      <div class="field">
+        <label for="seteo">Seteo actual</label>
+        <div class="box"><input id="seteo" inputmode="decimal" autocomplete="off" placeholder="7,6"><span class="unit">kg/ha</span></div>
+      </div>
+      <div class="field">
+        <label for="gastado">Semilla usada</label>
+        <div class="box"><input id="gastado" inputmode="decimal" autocomplete="off" placeholder="30"><span class="unit">kg</span></div>
+      </div>
+      <div class="field">
+        <label for="rindio">Hectáreas que rindió</label>
+        <div class="box"><input id="rindio" inputmode="decimal" autocomplete="off" placeholder="4,5"><span class="unit">ha</span></div>
+      </div>
+      <div class="field">
+        <label for="queda">Semilla que queda</label>
+        <div class="box"><input id="queda" inputmode="decimal" autocomplete="off" placeholder="210"><span class="unit">kg</span></div>
+        <p class="hint">Con el tanque vacío: solo lo que hay en bolsas.</p>
+      </div>
+      <div class="field">
+        <label for="faltan">Hectáreas que faltan</label>
+        <div class="box"><input id="faltan" inputmode="decimal" autocomplete="off" placeholder="32,3"><span class="unit">ha</span></div>
+      </div>
+      <div class="field">
+        <label for="contador">Contador ahora (opcional)</label>
+        <div class="box"><input id="contador" inputmode="decimal" autocomplete="off" placeholder="23,7"><span class="unit">ha</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="t-res">
+    <h2 id="t-res" class="sr" style="position:absolute;left:-9999px">Resultado</h2>
+    <div class="result" id="result" aria-live="polite">
+      <p class="r-label">Seteá</p>
+      <p class="r-big"><span class="r-num" id="r-num">–</span><span class="r-unit">kg/ha</span></p>
+      <p class="r-msg" id="r-msg">Completá los cinco datos de arriba.</p>
+      <dl class="rows" id="rows"></dl>
+    </div>
+    <p class="warn" id="warn" hidden></p>
+    <div class="actions">
+      <button type="button" class="primary" id="save" disabled>Guardar y nueva medición</button>
+      <button type="button" class="quiet" id="clear">Limpiar</button>
+    </div>
+  </section>
+
+  <section aria-labelledby="t-hist">
+    <h2 id="t-hist">Mediciones guardadas</h2>
+    <p class="empty" id="hist-empty">Todavía no hay ninguna. Al guardar una, se suma al promedio del factor.</p>
+    <table id="hist-table" hidden>
+      <thead><tr><th>Medición</th><th>Seteo</th><th>Real</th><th>Factor</th></tr></thead>
+      <tbody id="hist-body"></tbody>
+    </table>
+    <p class="avg" id="avg" hidden></p>
+    <button type="button" class="quiet" id="wipe" hidden>Borrar historial</button>
+  </section>
+
+  <section aria-labelledby="t-start">
+    <h2 id="t-start">Seteo de arranque</h2>
+    <div class="grid">
+      <div class="field">
+        <label for="objetivo">Dosis objetivo</label>
+        <div class="box"><input id="objetivo" inputmode="decimal" autocomplete="off" placeholder="6"><span class="unit">kg/ha</span></div>
+      </div>
+      <div class="field">
+        <label for="factor">Factor del dron</label>
+        <div class="box"><input id="factor" inputmode="decimal" autocomplete="off" placeholder="auto"></div>
+      </div>
+    </div>
+    <p class="start-out" id="start-out"></p>
+    <p class="small" id="start-note"></p>
+  </section>
+
+  <details>
+    <summary>Cómo calcula</summary>
+    <ul>
+      <li>Dosis real = semilla usada ÷ hectáreas que rindió.</li>
+      <li>Factor = dosis real ÷ seteo. Con 0,83 el dron tira un 17% menos de lo seteado.</li>
+      <li>Seteo nuevo = (semilla que queda ÷ hectáreas que faltan) ÷ factor.</li>
+      <li>La referencia puede ser una bolsa, un bolsón o cualquier cantidad: importa cuántos kg usaste y cuántas ha rindieron.</li>
+      <li>Medí con el tanque vacío. El factor cambia con cada semilla o producto, así que borrá el historial cuando cambies.</li>
+    </ul>
+  </details>
+</main>
+
+<script>
+(function () {
+  var DEFAULT_FACTOR = 0.83;
+  var KEY = 'seteo-dron-historial-v1';
+
+  function $(id) { return document.getElementById(id); }
+  function num(v) {
+    var n = parseFloat(String(v).trim().replace(',', '.'));
+    return isFinite(n) ? n : NaN;
+  }
+  function fmt(n, d) {
+    if (d === undefined) d = 1;
+    return n.toFixed(d).replace('.', ',');
+  }
+
+  var hist = [];
+  try {
+    hist = JSON.parse(localStorage.getItem(KEY) || '[]');
+    if (!Array.isArray(hist)) hist = [];
+  } catch (e) { hist = []; }
+  function persist() {
+    try { localStorage.setItem(KEY, JSON.stringify(hist)); } catch (e) {}
+  }
+
+  function avgFactor() {
+    var r = hist.slice(-3);
+    if (!r.length) return null;
+    var s = 0;
+    for (var i = 0; i < r.length; i++) s += r[i].factor;
+    return s / r.length;
+  }
+
+  var last = null;
+
+  function compute() {
+    var seteo = num($('seteo').value);
+    var gastado = num($('gastado').value);
+    var rindio = num($('rindio').value);
+    var queda = num($('queda').value);
+    var faltan = num($('faltan').value);
+    var contador = num($('contador').value);
+    if (!(seteo > 0 && gastado > 0 && rindio > 0 && queda > 0 && faltan > 0)) return null;
+    var real = gastado / rindio;
+    var factor = real / seteo;
+    var necesaria = queda / faltan;
+    var nuevo = necesaria / factor;
+    return {
+      seteo: seteo, gastado: gastado, rindio: rindio, queda: queda, faltan: faltan,
+      contador: contador, real: real, factor: factor, necesaria: necesaria, nuevo: nuevo
+    };
+  }
+
+  function addRow(rows, label, value) {
+    var row = document.createElement('div');
+    row.className = 'row';
+    var dt = document.createElement('dt');
+    var dd = document.createElement('dd');
+    dt.textContent = label;
+    dd.textContent = value;
+    row.appendChild(dt);
+    row.appendChild(dd);
+    rows.appendChild(row);
+  }
+
+  function renderResult() {
+    var c = compute();
+    last = c;
+    var rows = $('rows');
+    rows.innerHTML = '';
+    var warn = $('warn');
+    warn.hidden = true;
+    $('save').disabled = !c;
+
+    if (!c) {
+      $('r-num').textContent = '–';
+      $('r-msg').textContent = 'Completá los cinco datos de arriba.';
+      return;
+    }
+
+    $('r-num').textContent = fmt(c.nuevo, 1);
+    var dev = (c.factor - 1) * 100;
+    $('r-msg').textContent = dev < 0
+      ? 'El dron tira un ' + fmt(Math.abs(dev), 0) + '% menos de lo seteado.'
+      : 'El dron tira un ' + fmt(dev, 0) + '% más de lo seteado.';
+
+    addRow(rows, 'Dosis real medida', fmt(c.real, 2) + ' kg/ha');
+    addRow(rows, 'Dosis real necesaria', fmt(c.necesaria, 2) + ' kg/ha');
+    addRow(rows, 'Factor medido', fmt(c.factor, 2));
+    addRow(rows, 'Cada ' + fmt(c.gastado, c.gastado % 1 ? 1 : 0) + ' kg rinden', fmt(c.gastado / c.necesaria, 1) + ' ha');
+    addRow(rows, 'Cada 100 kg rinden', fmt(100 / c.necesaria, 1) + ' ha');
+    if (isFinite(c.contador)) {
+      addRow(rows, 'Próxima marca esperada', fmt(c.contador + c.gastado / c.necesaria, 1) + ' ha');
+    }
+    var af = avgFactor();
+    if (af) {
+      addRow(rows, 'Con el factor promedio', fmt(c.necesaria / af, 1) + ' kg/ha');
+    }
+
+    var msgs = [];
+    if (c.factor < 0.5 || c.factor > 1.5) {
+      msgs.push('El factor medido (' + fmt(c.factor, 2) + ') es muy raro. Revisá los kg usados y las hectáreas que rindió.');
+    }
+    if (c.nuevo > c.seteo * 1.5 || c.nuevo < c.seteo * 0.6) {
+      msgs.push('Es un cambio grande respecto del seteo actual. Confirmá que los datos estén bien cargados.');
+    }
+    if (msgs.length) {
+      warn.textContent = msgs.join(' ');
+      warn.hidden = false;
+    }
+  }
+
+  function renderHistory() {
+    var body = $('hist-body');
+    body.innerHTML = '';
+    var has = hist.length > 0;
+    $('hist-empty').hidden = has;
+    $('hist-table').hidden = !has;
+    $('wipe').hidden = !has;
+    var af = avgFactor();
+    var avg = $('avg');
+    avg.hidden = !af;
+    if (af) {
+      var n = Math.min(3, hist.length);
+      avg.textContent = n === 1
+        ? 'Factor de la única medición guardada: ' + fmt(af, 2)
+        : 'Factor promedio de las últimas ' + n + ': ' + fmt(af, 2);
+    }
+    var shown = hist.slice(-6);
+    for (var i = shown.length - 1; i >= 0; i--) {
+      var h = shown[i];
+      var idx = hist.length - (shown.length - 1 - i);
+      var tr = document.createElement('tr');
+      var cells = ['#' + idx, fmt(h.seteo, 1), fmt(h.real, 2), fmt(h.factor, 2)];
+      for (var j = 0; j < cells.length; j++) {
+        var td = document.createElement('td');
+        td.textContent = cells[j];
+        tr.appendChild(td);
+      }
+      body.appendChild(tr);
+    }
+  }
+
+  function renderStart() {
+    var obj = num($('objetivo').value);
+    var f = num($('factor').value);
+    var out = $('start-out');
+    var note = $('start-note');
+    var origen;
+    if (!(f > 0)) {
+      var af = avgFactor();
+      if (af) { f = af; origen = 'promedio de tus mediciones guardadas'; }
+      else { f = DEFAULT_FACTOR; origen = 'valor por defecto, sin mediciones guardadas'; }
+    } else {
+      origen = 'el que cargaste';
+    }
+    if (!(obj > 0)) {
+      out.textContent = '';
+      note.textContent = 'Poné la dosis que querés en el lote y te da el seteo para la primera bolsa.';
+      return;
+    }
+    out.innerHTML = 'Seteá <strong>' + fmt(obj / f, 1) + '</strong> kg/ha';
+    note.textContent = 'Factor usado: ' + fmt(f, 2) + ' (' + origen + ').';
+  }
+
+  function renderAll() { renderResult(); renderHistory(); renderStart(); }
+
+  var ids = ['seteo', 'gastado', 'rindio', 'queda', 'faltan', 'contador'];
+  for (var i = 0; i < ids.length; i++) $(ids[i]).addEventListener('input', renderResult);
+  $('objetivo').addEventListener('input', renderStart);
+  $('factor').addEventListener('input', renderStart);
+
+  $('save').addEventListener('click', function () {
+    if (!last) return;
+    hist.push({ seteo: last.seteo, real: last.real, factor: last.factor, t: Date.now() });
+    if (hist.length > 30) hist = hist.slice(-30);
+    persist();
+    var proximo = last.nuevo;
+    $('seteo').value = fmt(proximo, 1);
+    ['rindio', 'queda', 'faltan', 'contador'].forEach(function (id) { $(id).value = ''; });
+    renderAll();
+    $('rindio').focus();
+  });
+
+  $('clear').addEventListener('click', function () {
+    ids.forEach(function (id) { $(id).value = ''; });
+    renderResult();
+    $('seteo').focus();
+  });
+
+  $('wipe').addEventListener('click', function () {
+    if (!window.confirm('¿Borrar todas las mediciones guardadas?')) return;
+    hist = [];
+    persist();
+    renderAll();
+  });
+
+  renderAll();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}
+</script>
+</body>
+</html>
