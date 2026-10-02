@@ -157,17 +157,19 @@
   summary { cursor: pointer; font-weight: 600; }
   details ul { padding-left: 20px; margin: 10px 0 0; }
   details li { margin-bottom: 6px; }
+  .wide { grid-column: 1 / -1; }
+  .sub { grid-column: 1 / -1; margin: 6px 0 -2px; font-size: 14px; color: var(--muted); }
 </style>
 </head>
 <body>
 <main>
   <header>
     <h1>Seteo del dron</h1>
-    <p class="lede">Cargá la última medición y te dice en cuántos kg/ha setear para que la semilla alcance justo.</p>
+    <p class="lede">Cargá lo que pasó en la última tachada y la dosis que tenés que tirar por hectárea. Te dice en cuánto setear.</p>
   </header>
 
   <section aria-labelledby="t-med">
-    <h2 id="t-med">Medición</h2>
+    <h2 id="t-med">Última tachada</h2>
     <div class="grid">
       <div class="field">
         <label for="seteo">Seteo actual</label>
@@ -178,21 +180,38 @@
         <div class="box"><input id="gastado" inputmode="decimal" autocomplete="off" placeholder="30"><span class="unit">kg</span></div>
       </div>
       <div class="field">
-        <label for="rindio">Hectáreas que rindió</label>
-        <div class="box"><input id="rindio" inputmode="decimal" autocomplete="off" placeholder="4,5"><span class="unit">ha</span></div>
+        <label for="antes">Contador al empezar</label>
+        <div class="box"><input id="antes" inputmode="decimal" autocomplete="off" placeholder="19,2"><span class="unit">ha</span></div>
       </div>
+      <div class="field">
+        <label for="contador">Contador ahora</label>
+        <div class="box"><input id="contador" inputmode="decimal" autocomplete="off" placeholder="23,7"><span class="unit">ha</span></div>
+      </div>
+      <div class="field wide">
+        <label for="rindio">Hectáreas que rindió (opcional)</label>
+        <div class="box"><input id="rindio" inputmode="decimal" autocomplete="off" placeholder="se calcula con los dos contadores"><span class="unit">ha</span></div>
+        <p class="hint">No hace falta si cargás el contador ahora. En la primera tachada el contador cuenta desde 0, así que dejá el de arriba vacío. Después se completa solo.</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="t-meta">
+    <h2 id="t-meta">Lo que querés lograr</h2>
+    <div class="grid">
+      <div class="field wide">
+        <label for="objetivo">Dosis objetivo</label>
+        <div class="box"><input id="objetivo" inputmode="decimal" autocomplete="off" placeholder="6"><span class="unit">kg/ha</span></div>
+        <p class="hint">La dosis que tenés que tirar por hectárea. Se usa si no cargás lo que queda y lo que falta.</p>
+      </div>
+      <p class="sub">Opcional. Si los cargás, el seteo sale para que la semilla alcance justo.</p>
       <div class="field">
         <label for="queda">Semilla que queda</label>
         <div class="box"><input id="queda" inputmode="decimal" autocomplete="off" placeholder="210"><span class="unit">kg</span></div>
-        <p class="hint">Con el tanque vacío: solo lo que hay en bolsas.</p>
+        <p class="hint">Con el tanque vacío: solo bolsas.</p>
       </div>
       <div class="field">
         <label for="faltan">Hectáreas que faltan</label>
         <div class="box"><input id="faltan" inputmode="decimal" autocomplete="off" placeholder="32,3"><span class="unit">ha</span></div>
-      </div>
-      <div class="field">
-        <label for="contador">Contador ahora (opcional)</label>
-        <div class="box"><input id="contador" inputmode="decimal" autocomplete="off" placeholder="23,7"><span class="unit">ha</span></div>
       </div>
     </div>
   </section>
@@ -202,7 +221,7 @@
     <div class="result" id="result" aria-live="polite">
       <p class="r-label">Seteá</p>
       <p class="r-big"><span class="r-num" id="r-num">–</span><span class="r-unit">kg/ha</span></p>
-      <p class="r-msg" id="r-msg">Completá los cinco datos de arriba.</p>
+      <p class="r-msg" id="r-msg">Cargá el seteo, la semilla usada y las hectáreas de la última tachada.</p>
       <dl class="rows" id="rows"></dl>
     </div>
     <p class="warn" id="warn" hidden></p>
@@ -227,12 +246,12 @@
     <h2 id="t-start">Seteo de arranque</h2>
     <div class="grid">
       <div class="field">
-        <label for="objetivo">Dosis objetivo</label>
-        <div class="box"><input id="objetivo" inputmode="decimal" autocomplete="off" placeholder="6"><span class="unit">kg/ha</span></div>
+        <label for="a-objetivo">Dosis objetivo</label>
+        <div class="box"><input id="a-objetivo" inputmode="decimal" autocomplete="off" placeholder="6"><span class="unit">kg/ha</span></div>
       </div>
       <div class="field">
-        <label for="factor">Factor del dron</label>
-        <div class="box"><input id="factor" inputmode="decimal" autocomplete="off" placeholder="auto"></div>
+        <label for="a-factor">Factor del dron</label>
+        <div class="box"><input id="a-factor" inputmode="decimal" autocomplete="off" placeholder="auto"></div>
       </div>
     </div>
     <p class="start-out" id="start-out"></p>
@@ -242,11 +261,12 @@
   <details>
     <summary>Cómo calcula</summary>
     <ul>
-      <li>Dosis real = semilla usada ÷ hectáreas que rindió.</li>
+      <li>Dosis real = semilla usada ÷ hectáreas que rindió. Las hectáreas salen de restar los dos contadores, o las cargás a mano.</li>
       <li>Factor = dosis real ÷ seteo. Con 0,83 el dron tira un 17% menos de lo seteado.</li>
-      <li>Seteo nuevo = (semilla que queda ÷ hectáreas que faltan) ÷ factor.</li>
+      <li>Seteo nuevo = dosis que querés tirar ÷ factor.</li>
+      <li>Si cargás la semilla que queda y las hectáreas que faltan, la dosis sale de dividirlas (semilla ÷ hectáreas) y el seteo te da justo. Si no, usa la dosis objetivo.</li>
       <li>La referencia puede ser una bolsa, un bolsón o cualquier cantidad: importa cuántos kg usaste y cuántas ha rindieron.</li>
-      <li>Medí con el tanque vacío. El factor cambia con cada semilla o producto, así que borrá el historial cuando cambies.</li>
+      <li>El factor cambia con cada semilla o producto, así que borrá el historial cuando cambies.</li>
     </ul>
   </details>
 </main>
@@ -255,6 +275,8 @@
 (function () {
   var DEFAULT_FACTOR = 0.83;
   var KEY = 'seteo-dron-historial-v1';
+  var FKEY = 'seteo-dron-form-v1';
+  var FIELDS = ['seteo', 'gastado', 'antes', 'contador', 'rindio', 'objetivo', 'queda', 'faltan'];
 
   function $(id) { return document.getElementById(id); }
   function num(v) {
@@ -275,6 +297,20 @@
     try { localStorage.setItem(KEY, JSON.stringify(hist)); } catch (e) {}
   }
 
+  function saveForm() {
+    try {
+      var o = {};
+      FIELDS.forEach(function (id) { o[id] = $(id).value; });
+      localStorage.setItem(FKEY, JSON.stringify(o));
+    } catch (e) {}
+  }
+  function loadForm() {
+    try {
+      var o = JSON.parse(localStorage.getItem(FKEY) || '{}');
+      FIELDS.forEach(function (id) { if (typeof o[id] === 'string') $(id).value = o[id]; });
+    } catch (e) {}
+  }
+
   function avgFactor() {
     var r = hist.slice(-3);
     if (!r.length) return null;
@@ -289,18 +325,36 @@
     var seteo = num($('seteo').value);
     var gastado = num($('gastado').value);
     var rindio = num($('rindio').value);
+    var antes = num($('antes').value);
+    var ahora = num($('contador').value);
+    var derivado = false;
+    var antesEf = isFinite(antes) ? antes : 0;
+    if (!(rindio > 0) && isFinite(ahora) && ahora > antesEf) {
+      rindio = ahora - antesEf;
+      derivado = true;
+    }
+    var objetivo = num($('objetivo').value);
     var queda = num($('queda').value);
     var faltan = num($('faltan').value);
-    var contador = num($('contador').value);
-    if (!(seteo > 0 && gastado > 0 && rindio > 0 && queda > 0 && faltan > 0)) return null;
-    var real = gastado / rindio;
-    var factor = real / seteo;
-    var necesaria = queda / faltan;
-    var nuevo = necesaria / factor;
-    return {
-      seteo: seteo, gastado: gastado, rindio: rindio, queda: queda, faltan: faltan,
-      contador: contador, real: real, factor: factor, necesaria: necesaria, nuevo: nuevo
-    };
+
+    var c = { med: false, ok: false };
+    if (!(seteo > 0 && gastado > 0 && rindio > 0)) return c;
+
+    c.med = true;
+    c.seteo = seteo; c.gastado = gastado; c.rindio = rindio; c.derivado = derivado;
+    c.ahora = ahora; c.objetivo = objetivo; c.queda = queda; c.faltan = faltan;
+    c.real = gastado / rindio;
+    c.factor = c.real / seteo;
+
+    if (queda > 0 && faltan > 0) {
+      c.dosis = queda / faltan; c.base = 'lote';
+      if (objetivo > 0) c.nuevoObj = objetivo / c.factor;
+    } else if (objetivo > 0) {
+      c.dosis = objetivo; c.base = 'objetivo';
+    }
+
+    if (c.dosis) { c.nuevo = c.dosis / c.factor; c.ok = true; }
+    return c;
   }
 
   function addRow(rows, label, value) {
@@ -317,36 +371,58 @@
 
   function renderResult() {
     var c = compute();
-    last = c;
+    last = c.med ? c : null;
     var rows = $('rows');
     rows.innerHTML = '';
     var warn = $('warn');
     warn.hidden = true;
-    $('save').disabled = !c;
+    $('save').disabled = !c.med;
 
-    if (!c) {
+    if (!c.med) {
       $('r-num').textContent = '–';
-      $('r-msg').textContent = 'Completá los cinco datos de arriba.';
+      $('r-msg').textContent = 'Cargá el seteo, la semilla usada y las hectáreas de la última tachada.';
+      return;
+    }
+
+    var dev = (c.factor - 1) * 100;
+    var devTxt = dev < 0
+      ? 'El dron tira un ' + fmt(Math.abs(dev), 0) + '% menos de lo seteado.'
+      : 'El dron tira un ' + fmt(dev, 0) + '% más de lo seteado.';
+
+    if (c.derivado) addRow(rows, 'Hectáreas que rindió', fmt(c.rindio, 1) + ' ha (de los contadores)');
+    addRow(rows, 'Dosis real medida', fmt(c.real, 2) + ' kg/ha');
+    addRow(rows, 'Factor medido', fmt(c.factor, 2));
+
+    if (!c.ok) {
+      $('r-num').textContent = '–';
+      $('r-msg').textContent = devTxt + ' Falta la dosis objetivo, o la semilla que queda y las hectáreas que faltan.';
       return;
     }
 
     $('r-num').textContent = fmt(c.nuevo, 1);
-    var dev = (c.factor - 1) * 100;
-    $('r-msg').textContent = dev < 0
-      ? 'El dron tira un ' + fmt(Math.abs(dev), 0) + '% menos de lo seteado.'
-      : 'El dron tira un ' + fmt(dev, 0) + '% más de lo seteado.';
+    $('r-msg').textContent = c.base === 'lote'
+      ? 'Para que la semilla alcance justo: ' + fmt(c.dosis, 2) + ' kg/ha reales. ' + devTxt
+      : 'Para tirar ' + fmt(c.dosis, 1) + ' kg/ha reales. ' + devTxt;
 
-    addRow(rows, 'Dosis real medida', fmt(c.real, 2) + ' kg/ha');
-    addRow(rows, 'Dosis real necesaria', fmt(c.necesaria, 2) + ' kg/ha');
-    addRow(rows, 'Factor medido', fmt(c.factor, 2));
-    addRow(rows, 'Cada ' + fmt(c.gastado, c.gastado % 1 ? 1 : 0) + ' kg rinden', fmt(c.gastado / c.necesaria, 1) + ' ha');
-    addRow(rows, 'Cada 100 kg rinden', fmt(100 / c.necesaria, 1) + ' ha');
-    if (isFinite(c.contador)) {
-      addRow(rows, 'Próxima marca esperada', fmt(c.contador + c.gastado / c.necesaria, 1) + ' ha');
+    if (c.base === 'lote' && c.objetivo > 0) {
+      var diff = c.queda - c.faltan * c.objetivo;
+      addRow(rows, 'Con tu dosis de ' + fmt(c.objetivo, 1) + ' kg/ha', 'setear ' + fmt(c.nuevoObj, 1) + ' (' + (diff >= 0 ? 'sobran ' + fmt(diff, 0) : 'faltan ' + fmt(-diff, 0)) + ' kg)');
+    }
+    if (c.base === 'objetivo') {
+      if (c.faltan > 0) {
+        addRow(rows, 'Semilla que necesitás', fmt(c.faltan * c.objetivo, 0) + ' kg');
+      } else if (c.queda > 0) {
+        addRow(rows, 'Con lo que queda cubrís', fmt(c.queda / c.objetivo, 1) + ' ha');
+      }
+    }
+    addRow(rows, 'Cada ' + fmt(c.gastado, c.gastado % 1 ? 1 : 0) + ' kg rinden', fmt(c.gastado / c.dosis, 1) + ' ha');
+    addRow(rows, 'Cada 100 kg rinden', fmt(100 / c.dosis, 1) + ' ha');
+    if (isFinite(c.ahora)) {
+      addRow(rows, 'Próxima marca esperada', fmt(c.ahora + c.gastado / c.dosis, 1) + ' ha');
     }
     var af = avgFactor();
     if (af) {
-      addRow(rows, 'Con el factor promedio', fmt(c.necesaria / af, 1) + ' kg/ha');
+      addRow(rows, 'Con el factor promedio', fmt(c.dosis / af, 1) + ' kg/ha');
     }
 
     var msgs = [];
@@ -394,8 +470,8 @@
   }
 
   function renderStart() {
-    var obj = num($('objetivo').value);
-    var f = num($('factor').value);
+    var obj = num($('a-objetivo').value);
+    var f = num($('a-factor').value);
     var out = $('start-out');
     var note = $('start-note');
     var origen;
@@ -417,26 +493,33 @@
 
   function renderAll() { renderResult(); renderHistory(); renderStart(); }
 
-  var ids = ['seteo', 'gastado', 'rindio', 'queda', 'faltan', 'contador'];
-  for (var i = 0; i < ids.length; i++) $(ids[i]).addEventListener('input', renderResult);
-  $('objetivo').addEventListener('input', renderStart);
-  $('factor').addEventListener('input', renderStart);
+  function onInput() { renderResult(); saveForm(); }
+  FIELDS.forEach(function (id) { $(id).addEventListener('input', onInput); });
+  $('a-objetivo').addEventListener('input', renderStart);
+  $('a-factor').addEventListener('input', renderStart);
 
   $('save').addEventListener('click', function () {
     if (!last) return;
     hist.push({ seteo: last.seteo, real: last.real, factor: last.factor, t: Date.now() });
     if (hist.length > 30) hist = hist.slice(-30);
     persist();
-    var proximo = last.nuevo;
-    $('seteo').value = fmt(proximo, 1);
-    ['rindio', 'queda', 'faltan', 'contador'].forEach(function (id) { $(id).value = ''; });
+    if (last.ok) $('seteo').value = fmt(last.nuevo, 1);
+    if (isFinite(last.ahora)) {
+      $('antes').value = $('contador').value;
+    } else if (!last.derivado) {
+      var a0 = num($('antes').value);
+      $('antes').value = fmt((isFinite(a0) ? a0 : 0) + last.rindio, 1);
+    }
+    ['rindio', 'contador', 'queda', 'faltan'].forEach(function (id) { $(id).value = ''; });
     renderAll();
-    $('rindio').focus();
+    saveForm();
+    $('contador').focus();
   });
 
   $('clear').addEventListener('click', function () {
-    ids.forEach(function (id) { $(id).value = ''; });
+    FIELDS.forEach(function (id) { $(id).value = ''; });
     renderResult();
+    saveForm();
     $('seteo').focus();
   });
 
@@ -447,6 +530,7 @@
     renderAll();
   });
 
+  loadForm();
   renderAll();
 })();
 </script>
