@@ -201,17 +201,18 @@
       <div class="field wide">
         <label for="objetivo">Dosis objetivo</label>
         <div class="box"><input id="objetivo" inputmode="decimal" autocomplete="off" placeholder="6"><span class="unit">kg/ha</span></div>
-        <p class="hint">La dosis que tenés que tirar por hectárea. Se usa si no cargás lo que queda y lo que falta.</p>
+        <p class="hint">La dosis que tenés que tirar por hectárea. Se usa si no cargás lo que queda y el lote.</p>
       </div>
-      <p class="sub">Opcional. Si los cargás, el seteo sale para que la semilla alcance justo.</p>
+      <p class="sub">Opcional. Si cargás los dos, las hectáreas que faltan las calcula solo con el contador y el seteo sale para que la semilla alcance justo.</p>
       <div class="field">
         <label for="queda">Semilla que queda</label>
         <div class="box"><input id="queda" inputmode="decimal" autocomplete="off" placeholder="210"><span class="unit">kg</span></div>
         <p class="hint">Con el tanque vacío: solo bolsas.</p>
       </div>
       <div class="field">
-        <label for="faltan">Hectáreas que faltan</label>
-        <div class="box"><input id="faltan" inputmode="decimal" autocomplete="off" placeholder="32,3"><span class="unit">ha</span></div>
+        <label for="lote">Hectáreas del lote</label>
+        <div class="box"><input id="lote" inputmode="decimal" autocomplete="off" placeholder="56"><span class="unit">ha</span></div>
+        <p class="hint">Se carga una sola vez. Asume que el contador arrancó en 0 en este lote.</p>
       </div>
     </div>
   </section>
@@ -264,7 +265,8 @@
       <li>Dosis real = semilla usada ÷ hectáreas que rindió. Las hectáreas salen de restar los dos contadores, o las cargás a mano.</li>
       <li>Factor = dosis real ÷ seteo. Con 0,83 el dron tira un 17% menos de lo seteado.</li>
       <li>Seteo nuevo = dosis que querés tirar ÷ factor.</li>
-      <li>Si cargás la semilla que queda y las hectáreas que faltan, la dosis sale de dividirlas (semilla ÷ hectáreas) y el seteo te da justo. Si no, usa la dosis objetivo.</li>
+      <li>Las hectáreas que faltan = hectáreas del lote − hectáreas hechas (el contador ahora, o la suma de las tachadas si cargás las ha a mano).</li>
+      <li>Si cargás la semilla que queda y las hectáreas del lote, la dosis sale de dividirlas (semilla ÷ hectáreas que faltan) y el seteo te da justo. Si no, usa la dosis objetivo.</li>
       <li>La referencia puede ser una bolsa, un bolsón o cualquier cantidad: importa cuántos kg usaste y cuántas ha rindieron.</li>
       <li>El factor cambia con cada semilla o producto, así que borrá el historial cuando cambies.</li>
     </ul>
@@ -276,7 +278,7 @@
   var DEFAULT_FACTOR = 0.83;
   var KEY = 'seteo-dron-historial-v1';
   var FKEY = 'seteo-dron-form-v1';
-  var FIELDS = ['seteo', 'gastado', 'antes', 'contador', 'rindio', 'objetivo', 'queda', 'faltan'];
+  var FIELDS = ['seteo', 'gastado', 'antes', 'contador', 'rindio', 'objetivo', 'queda', 'lote'];
 
   function $(id) { return document.getElementById(id); }
   function num(v) {
@@ -335,14 +337,17 @@
     }
     var objetivo = num($('objetivo').value);
     var queda = num($('queda').value);
-    var faltan = num($('faltan').value);
+    var lote = num($('lote').value);
 
     var c = { med: false, ok: false };
     if (!(seteo > 0 && gastado > 0 && rindio > 0)) return c;
 
     c.med = true;
     c.seteo = seteo; c.gastado = gastado; c.rindio = rindio; c.derivado = derivado;
-    c.ahora = ahora; c.objetivo = objetivo; c.queda = queda; c.faltan = faltan;
+    c.ahora = ahora; c.objetivo = objetivo; c.queda = queda; c.lote = lote;
+    c.hechas = isFinite(ahora) ? ahora : antesEf + rindio;
+    var faltan = lote > 0 ? lote - c.hechas : NaN;
+    c.faltan = faltan > 0 ? faltan : NaN;
     c.real = gastado / rindio;
     c.factor = c.real / seteo;
 
@@ -392,10 +397,13 @@
     if (c.derivado) addRow(rows, 'Hectáreas que rindió', fmt(c.rindio, 1) + ' ha (de los contadores)');
     addRow(rows, 'Dosis real medida', fmt(c.real, 2) + ' kg/ha');
     addRow(rows, 'Factor medido', fmt(c.factor, 2));
+    if (c.lote > 0) {
+      addRow(rows, 'Hectáreas del lote', c.faltan > 0 ? 'faltan ' + fmt(c.faltan, 1) + ' de ' + fmt(c.lote, 1) : 'lote completo');
+    }
 
     if (!c.ok) {
       $('r-num').textContent = '–';
-      $('r-msg').textContent = devTxt + ' Falta la dosis objetivo, o la semilla que queda y las hectáreas que faltan.';
+      $('r-msg').textContent = devTxt + ' Falta la dosis objetivo, o la semilla que queda y las hectáreas del lote.';
       return;
     }
 
@@ -426,6 +434,9 @@
     }
 
     var msgs = [];
+    if (c.lote > 0 && !(c.faltan > 0)) {
+      msgs.push('Según el contador ya hiciste las ' + fmt(c.lote, 1) + ' ha del lote, así que no se usó lo que queda para calcular.');
+    }
     if (c.factor < 0.5 || c.factor > 1.5) {
       msgs.push('El factor medido (' + fmt(c.factor, 2) + ') es muy raro. Revisá los kg usados y las hectáreas que rindió.');
     }
@@ -510,7 +521,7 @@
       var a0 = num($('antes').value);
       $('antes').value = fmt((isFinite(a0) ? a0 : 0) + last.rindio, 1);
     }
-    ['rindio', 'contador', 'queda', 'faltan'].forEach(function (id) { $(id).value = ''; });
+    ['rindio', 'contador', 'queda'].forEach(function (id) { $(id).value = ''; });
     renderAll();
     saveForm();
     $('contador').focus();
