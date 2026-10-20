@@ -201,19 +201,25 @@
       <div class="field wide">
         <label for="objetivo">Dosis objetivo</label>
         <div class="box"><input id="objetivo" inputmode="decimal" autocomplete="off" placeholder="6"><span class="unit">kg/ha</span></div>
-        <p class="hint">La dosis que tenés que tirar por hectárea. Se usa si no cargás lo que queda y el lote.</p>
+        <p class="hint">La dosis que tenés que tirar por hectárea. Se usa si no cargás la semilla ni el lote.</p>
       </div>
-      <p class="sub">Opcional. Si cargás los dos, las hectáreas que faltan las calcula solo con el contador y el seteo sale para que la semilla alcance justo.</p>
+      <p class="sub">Opcional. Cargá el total de semilla y las hectáreas del lote una vez: la app va restando lo que usás, calcula cuánto queda y cuánto falta, y el seteo sale para que alcance justo.</p>
       <div class="field">
-        <label for="queda">Semilla que queda</label>
-        <div class="box"><input id="queda" inputmode="decimal" autocomplete="off" placeholder="210"><span class="unit">kg</span></div>
-        <p class="hint">Con el tanque vacío: solo bolsas.</p>
+        <label for="total">Semilla total del lote</label>
+        <div class="box"><input id="total" inputmode="decimal" autocomplete="off" placeholder="336"><span class="unit">kg</span></div>
+        <p class="hint">Una sola vez. Se va restando sola con cada tachada guardada.</p>
       </div>
       <div class="field">
         <label for="lote">Hectáreas del lote</label>
         <div class="box"><input id="lote" inputmode="decimal" autocomplete="off" placeholder="56"><span class="unit">ha</span></div>
-        <p class="hint">Se carga una sola vez. Asume que el contador arrancó en 0 en este lote.</p>
+        <p class="hint">Una sola vez. Asume que el contador arrancó en 0 en este lote.</p>
       </div>
+      <div class="field wide">
+        <label for="queda">Semilla que queda (opcional)</label>
+        <div class="box"><input id="queda" inputmode="decimal" autocomplete="off" placeholder="se calcula con el total"><span class="unit">kg</span></div>
+        <p class="hint">Con el tanque vacío: solo bolsas. Si la cargás, se usa en vez de la calculada.</p>
+      </div>
+      <p class="small wide" id="usado-info"></p>
     </div>
   </section>
 
@@ -266,7 +272,8 @@
       <li>Factor = dosis real ÷ seteo. Con 0,83 el dron tira un 17% menos de lo seteado.</li>
       <li>Seteo nuevo = dosis que querés tirar ÷ factor.</li>
       <li>Las hectáreas que faltan = hectáreas del lote − hectáreas hechas (el contador ahora, o la suma de las tachadas si cargás las ha a mano).</li>
-      <li>Si cargás la semilla que queda y las hectáreas del lote, la dosis sale de dividirlas (semilla ÷ hectáreas que faltan) y el seteo te da justo. Si no, usa la dosis objetivo.</li>
+      <li>Semilla que queda = total del lote − semilla usada en las tachadas guardadas − la de esta tachada. Si la cargás a mano, usa esa. Si arrancás con la app a mitad de lote, poné en el total lo que tenías al empezar esa tachada.</li>
+      <li>Si hay semilla que queda y hectáreas del lote, la dosis sale de dividirlas (semilla ÷ hectáreas que faltan) y el seteo te da justo. Si no, usa la dosis objetivo.</li>
       <li>La referencia puede ser una bolsa, un bolsón o cualquier cantidad: importa cuántos kg usaste y cuántas ha rindieron.</li>
       <li>El factor cambia con cada semilla o producto, así que borrá el historial cuando cambies.</li>
     </ul>
@@ -278,7 +285,8 @@
   var DEFAULT_FACTOR = 0.83;
   var KEY = 'seteo-dron-historial-v1';
   var FKEY = 'seteo-dron-form-v1';
-  var FIELDS = ['seteo', 'gastado', 'antes', 'contador', 'rindio', 'objetivo', 'queda', 'lote'];
+  var FIELDS = ['seteo', 'gastado', 'antes', 'contador', 'rindio', 'objetivo', 'queda', 'lote', 'total'];
+  var usadoPrev = 0;
 
   function $(id) { return document.getElementById(id); }
   function num(v) {
@@ -303,6 +311,7 @@
     try {
       var o = {};
       FIELDS.forEach(function (id) { o[id] = $(id).value; });
+      o.__usado = usadoPrev;
       localStorage.setItem(FKEY, JSON.stringify(o));
     } catch (e) {}
   }
@@ -310,6 +319,7 @@
     try {
       var o = JSON.parse(localStorage.getItem(FKEY) || '{}');
       FIELDS.forEach(function (id) { if (typeof o[id] === 'string') $(id).value = o[id]; });
+      if (typeof o.__usado === 'number' && o.__usado >= 0) usadoPrev = o.__usado;
     } catch (e) {}
   }
 
@@ -338,13 +348,20 @@
     var objetivo = num($('objetivo').value);
     var queda = num($('queda').value);
     var lote = num($('lote').value);
+    var total = num($('total').value);
 
     var c = { med: false, ok: false };
     if (!(seteo > 0 && gastado > 0 && rindio > 0)) return c;
 
     c.med = true;
     c.seteo = seteo; c.gastado = gastado; c.rindio = rindio; c.derivado = derivado;
+    var quedaCalc = false, sinSemilla = false;
+    if (!(queda > 0) && total > 0) {
+      var q = total - usadoPrev - gastado;
+      if (q > 0) { queda = q; quedaCalc = true; } else { sinSemilla = true; }
+    }
     c.ahora = ahora; c.objetivo = objetivo; c.queda = queda; c.lote = lote;
+    c.total = total; c.quedaCalc = quedaCalc; c.sinSemilla = sinSemilla; c.usado = usadoPrev + gastado;
     c.hechas = isFinite(ahora) ? ahora : antesEf + rindio;
     var faltan = lote > 0 ? lote - c.hechas : NaN;
     c.faltan = faltan > 0 ? faltan : NaN;
@@ -375,6 +392,7 @@
   }
 
   function renderResult() {
+    $('usado-info').textContent = usadoPrev > 0 ? 'Usada en las tachadas guardadas: ' + fmt(usadoPrev, 0) + ' kg.' : '';
     var c = compute();
     last = c.med ? c : null;
     var rows = $('rows');
@@ -399,6 +417,11 @@
     addRow(rows, 'Factor medido', fmt(c.factor, 2));
     if (c.lote > 0) {
       addRow(rows, 'Hectáreas del lote', c.faltan > 0 ? 'faltan ' + fmt(c.faltan, 1) + ' de ' + fmt(c.lote, 1) : 'lote completo');
+    }
+
+    if (c.total > 0) {
+      addRow(rows, 'Semilla usada en el lote', fmt(c.usado, 0) + ' kg de ' + fmt(c.total, 0));
+      if (c.quedaCalc) addRow(rows, 'Semilla que queda', fmt(c.queda, 0) + ' kg (calculada)');
     }
 
     if (!c.ok) {
@@ -434,6 +457,9 @@
     }
 
     var msgs = [];
+    if (c.sinSemilla) {
+      msgs.push('Según el total, ya usaste toda la semilla del lote, así que no se usó para calcular. Revisá el total o cargá a mano lo que queda.');
+    }
     if (c.lote > 0 && !(c.faltan > 0)) {
       msgs.push('Según el contador ya hiciste las ' + fmt(c.lote, 1) + ' ha del lote, así que no se usó lo que queda para calcular.');
     }
@@ -514,6 +540,7 @@
     hist.push({ seteo: last.seteo, real: last.real, factor: last.factor, t: Date.now() });
     if (hist.length > 30) hist = hist.slice(-30);
     persist();
+    usadoPrev += last.gastado;
     if (last.ok) $('seteo').value = fmt(last.nuevo, 1);
     if (isFinite(last.ahora)) {
       $('antes').value = $('contador').value;
@@ -529,6 +556,7 @@
 
   $('clear').addEventListener('click', function () {
     FIELDS.forEach(function (id) { $(id).value = ''; });
+    usadoPrev = 0;
     renderResult();
     saveForm();
     $('seteo').focus();
