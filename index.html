@@ -159,111 +159,229 @@
   details li { margin-bottom: 6px; }
   .wide { grid-column: 1 / -1; }
   .sub { grid-column: 1 / -1; margin: 6px 0 -2px; font-size: 14px; color: var(--muted); }
+  .tabbar {
+    position: sticky; top: 0; z-index: 5;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+    background: var(--bg); padding: 8px 0 12px; margin: 0 0 14px;
+  }
+  .tab {
+    min-height: 52px; font-size: 20px; font-weight: 700; letter-spacing: .01em;
+    border: 2px solid var(--line); background: var(--surface); color: var(--muted);
+    border-radius: 12px; padding: 0 12px;
+  }
+  .tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .panel[hidden] { display: none; }
 </style>
 </head>
 <body>
 <main>
   <header>
     <h1>Seteo del dron</h1>
-    <p class="lede">Cargá lo que pasó en la última tachada y la dosis que tenés que tirar por hectárea. Te dice en cuánto setear.</p>
+    <p class="lede">Elegí el dron. Cada uno tiene su propio factor, lote e historial.</p>
   </header>
 
-  <section aria-labelledby="t-med">
-    <h2 id="t-med">Última tachada</h2>
+  <div class="tabbar" role="tablist" aria-label="Dron">
+    <button type="button" class="tab" role="tab" id="tab-p150" aria-controls="panel-p150" aria-selected="true">P150</button>
+    <button type="button" class="tab" role="tab" id="tab-p60" aria-controls="panel-p60" aria-selected="false" tabindex="-1">P60</button>
+  </div>
+
+  <div class="panel" id="panel-p150" role="tabpanel" aria-labelledby="tab-p150">
+<section aria-labelledby="p150-t-med">
+    <h2 id="p150-t-med">Última tachada</h2>
     <div class="grid">
       <div class="field">
-        <label for="seteo">Seteo actual</label>
-        <div class="box"><input id="seteo" inputmode="decimal" autocomplete="off" placeholder="7,6"><span class="unit">kg/ha</span></div>
+        <label for="p150-seteo">Seteo actual</label>
+        <div class="box"><input id="p150-seteo" inputmode="decimal" autocomplete="off" placeholder="7,6"><span class="unit">kg/ha</span></div>
       </div>
       <div class="field">
-        <label for="gastado">Semilla usada</label>
-        <div class="box"><input id="gastado" inputmode="decimal" autocomplete="off" placeholder="30"><span class="unit">kg</span></div>
+        <label for="p150-gastado">Semilla usada</label>
+        <div class="box"><input id="p150-gastado" inputmode="decimal" autocomplete="off" placeholder="30"><span class="unit">kg</span></div>
       </div>
       <div class="field">
-        <label for="antes">Contador al empezar</label>
-        <div class="box"><input id="antes" inputmode="decimal" autocomplete="off" placeholder="19,2"><span class="unit">ha</span></div>
+        <label for="p150-antes">Contador al empezar</label>
+        <div class="box"><input id="p150-antes" inputmode="decimal" autocomplete="off" placeholder="19,2"><span class="unit">ha</span></div>
       </div>
       <div class="field">
-        <label for="contador">Contador ahora</label>
-        <div class="box"><input id="contador" inputmode="decimal" autocomplete="off" placeholder="23,7"><span class="unit">ha</span></div>
+        <label for="p150-contador">Contador ahora</label>
+        <div class="box"><input id="p150-contador" inputmode="decimal" autocomplete="off" placeholder="23,7"><span class="unit">ha</span></div>
       </div>
       <div class="field wide">
-        <label for="rindio">Hectáreas que rindió (opcional)</label>
-        <div class="box"><input id="rindio" inputmode="decimal" autocomplete="off" placeholder="se calcula con los dos contadores"><span class="unit">ha</span></div>
+        <label for="p150-rindio">Hectáreas que rindió (opcional)</label>
+        <div class="box"><input id="p150-rindio" inputmode="decimal" autocomplete="off" placeholder="se calcula sola"><span class="unit">ha</span></div>
         <p class="hint">No hace falta si cargás el contador ahora. En la primera tachada el contador cuenta desde 0, así que dejá el de arriba vacío. Después se completa solo.</p>
       </div>
     </div>
   </section>
 
-  <section aria-labelledby="t-meta">
-    <h2 id="t-meta">Lo que querés lograr</h2>
+  <section aria-labelledby="p150-t-meta">
+    <h2 id="p150-t-meta">Lo que querés lograr</h2>
     <div class="grid">
       <div class="field wide">
-        <label for="objetivo">Dosis objetivo</label>
-        <div class="box"><input id="objetivo" inputmode="decimal" autocomplete="off" placeholder="6"><span class="unit">kg/ha</span></div>
+        <label for="p150-objetivo">Dosis objetivo</label>
+        <div class="box"><input id="p150-objetivo" inputmode="decimal" autocomplete="off" placeholder="6"><span class="unit">kg/ha</span></div>
         <p class="hint">La dosis que tenés que tirar por hectárea. Se usa si no cargás la semilla ni el lote.</p>
       </div>
       <p class="sub">Opcional. Cargá el total de semilla y las hectáreas del lote una vez: la app va restando lo que usás, calcula cuánto queda y cuánto falta, y el seteo sale para que alcance justo.</p>
       <div class="field">
-        <label for="total">Semilla total del lote</label>
-        <div class="box"><input id="total" inputmode="decimal" autocomplete="off" placeholder="336"><span class="unit">kg</span></div>
+        <label for="p150-total">Semilla total del lote</label>
+        <div class="box"><input id="p150-total" inputmode="decimal" autocomplete="off" placeholder="336"><span class="unit">kg</span></div>
         <p class="hint">Una sola vez. Se va restando sola con cada tachada guardada.</p>
       </div>
       <div class="field">
-        <label for="lote">Hectáreas del lote</label>
-        <div class="box"><input id="lote" inputmode="decimal" autocomplete="off" placeholder="56"><span class="unit">ha</span></div>
+        <label for="p150-lote">Hectáreas del lote</label>
+        <div class="box"><input id="p150-lote" inputmode="decimal" autocomplete="off" placeholder="56"><span class="unit">ha</span></div>
         <p class="hint">Una sola vez. Asume que el contador arrancó en 0 en este lote.</p>
       </div>
       <div class="field wide">
-        <label for="queda">Semilla que queda (opcional)</label>
-        <div class="box"><input id="queda" inputmode="decimal" autocomplete="off" placeholder="se calcula con el total"><span class="unit">kg</span></div>
+        <label for="p150-queda">Semilla que queda (opcional)</label>
+        <div class="box"><input id="p150-queda" inputmode="decimal" autocomplete="off" placeholder="se calcula con el total"><span class="unit">kg</span></div>
         <p class="hint">Con el tanque vacío: solo bolsas. Si la cargás, se usa en vez de la calculada.</p>
       </div>
-      <p class="small wide" id="usado-info"></p>
+      <p class="small wide" id="p150-usado-info"></p>
     </div>
   </section>
 
-  <section aria-labelledby="t-res">
-    <h2 id="t-res" class="sr" style="position:absolute;left:-9999px">Resultado</h2>
-    <div class="result" id="result" aria-live="polite">
-      <p class="r-label">Seteá</p>
-      <p class="r-big"><span class="r-num" id="r-num">–</span><span class="r-unit">kg/ha</span></p>
-      <p class="r-msg" id="r-msg">Cargá el seteo, la semilla usada y las hectáreas de la última tachada.</p>
-      <dl class="rows" id="rows"></dl>
+  <section aria-labelledby="p150-t-res">
+    <h2 id="p150-t-res" class="sr" style="position:absolute;left:-9999px">Resultado</h2>
+    <div class="result" id="p150-result" aria-live="polite">
+      <p class="r-label">Seteá el P150</p>
+      <p class="r-big"><span class="r-num" id="p150-r-num">–</span><span class="r-unit">kg/ha</span></p>
+      <p class="r-msg" id="p150-r-msg">Cargá el seteo, la semilla usada y las hectáreas de la última tachada.</p>
+      <dl class="rows" id="p150-rows"></dl>
     </div>
-    <p class="warn" id="warn" hidden></p>
+    <p class="warn" id="p150-warn" hidden></p>
     <div class="actions">
-      <button type="button" class="primary" id="save" disabled>Guardar y nueva medición</button>
-      <button type="button" class="quiet" id="clear">Limpiar</button>
+      <button type="button" class="primary" id="p150-save" disabled>Guardar y nueva medición</button>
+      <button type="button" class="quiet" id="p150-clear">Limpiar</button>
     </div>
   </section>
 
-  <section aria-labelledby="t-hist">
-    <h2 id="t-hist">Mediciones guardadas</h2>
-    <p class="empty" id="hist-empty">Todavía no hay ninguna. Al guardar una, se suma al promedio del factor.</p>
-    <table id="hist-table" hidden>
+  <section aria-labelledby="p150-t-hist">
+    <h2 id="p150-t-hist">Mediciones guardadas</h2>
+    <p class="empty" id="p150-hist-empty">Todavía no hay ninguna. Al guardar una, se suma al promedio del factor.</p>
+    <table id="p150-hist-table" hidden>
       <thead><tr><th>Medición</th><th>Seteo</th><th>Real</th><th>Factor</th></tr></thead>
-      <tbody id="hist-body"></tbody>
+      <tbody id="p150-hist-body"></tbody>
     </table>
-    <p class="avg" id="avg" hidden></p>
-    <button type="button" class="quiet" id="wipe" hidden>Borrar historial</button>
+    <p class="avg" id="p150-avg" hidden></p>
+    <button type="button" class="quiet" id="p150-wipe" hidden>Borrar historial</button>
   </section>
 
-  <section aria-labelledby="t-start">
-    <h2 id="t-start">Seteo de arranque</h2>
+  <section aria-labelledby="p150-t-start">
+    <h2 id="p150-t-start">Seteo de arranque</h2>
     <div class="grid">
       <div class="field">
-        <label for="a-objetivo">Dosis objetivo</label>
-        <div class="box"><input id="a-objetivo" inputmode="decimal" autocomplete="off" placeholder="6"><span class="unit">kg/ha</span></div>
+        <label for="p150-a-objetivo">Dosis objetivo</label>
+        <div class="box"><input id="p150-a-objetivo" inputmode="decimal" autocomplete="off" placeholder="6"><span class="unit">kg/ha</span></div>
       </div>
       <div class="field">
-        <label for="a-factor">Factor del dron</label>
-        <div class="box"><input id="a-factor" inputmode="decimal" autocomplete="off" placeholder="auto"></div>
+        <label for="p150-a-factor">Factor del dron</label>
+        <div class="box"><input id="p150-a-factor" inputmode="decimal" autocomplete="off" placeholder="auto"></div>
       </div>
     </div>
-    <p class="start-out" id="start-out"></p>
-    <p class="small" id="start-note"></p>
+    <p class="start-out" id="p150-start-out"></p>
+    <p class="small" id="p150-start-note"></p>
   </section>
+  </div>
+
+  <div class="panel" id="panel-p60" role="tabpanel" aria-labelledby="tab-p60" hidden>
+<section aria-labelledby="p60-t-med">
+    <h2 id="p60-t-med">Última tachada</h2>
+    <div class="grid">
+      <div class="field">
+        <label for="p60-seteo">Seteo actual</label>
+        <div class="box"><input id="p60-seteo" inputmode="decimal" autocomplete="off" placeholder="7,6"><span class="unit">kg/ha</span></div>
+      </div>
+      <div class="field">
+        <label for="p60-gastado">Semilla usada</label>
+        <div class="box"><input id="p60-gastado" inputmode="decimal" autocomplete="off" placeholder="30"><span class="unit">kg</span></div>
+      </div>
+      <div class="field">
+        <label for="p60-antes">Contador al empezar</label>
+        <div class="box"><input id="p60-antes" inputmode="decimal" autocomplete="off" placeholder="19,2"><span class="unit">ha</span></div>
+      </div>
+      <div class="field">
+        <label for="p60-contador">Contador ahora</label>
+        <div class="box"><input id="p60-contador" inputmode="decimal" autocomplete="off" placeholder="23,7"><span class="unit">ha</span></div>
+      </div>
+      <div class="field wide">
+        <label for="p60-rindio">Hectáreas que rindió (opcional)</label>
+        <div class="box"><input id="p60-rindio" inputmode="decimal" autocomplete="off" placeholder="se calcula sola"><span class="unit">ha</span></div>
+        <p class="hint">No hace falta si cargás el contador ahora. En la primera tachada el contador cuenta desde 0, así que dejá el de arriba vacío. Después se completa solo.</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="p60-t-meta">
+    <h2 id="p60-t-meta">Lo que querés lograr</h2>
+    <div class="grid">
+      <div class="field wide">
+        <label for="p60-objetivo">Dosis objetivo</label>
+        <div class="box"><input id="p60-objetivo" inputmode="decimal" autocomplete="off" placeholder="6"><span class="unit">kg/ha</span></div>
+        <p class="hint">La dosis que tenés que tirar por hectárea. Se usa si no cargás la semilla ni el lote.</p>
+      </div>
+      <p class="sub">Opcional. Cargá el total de semilla y las hectáreas del lote una vez: la app va restando lo que usás, calcula cuánto queda y cuánto falta, y el seteo sale para que alcance justo.</p>
+      <div class="field">
+        <label for="p60-total">Semilla total del lote</label>
+        <div class="box"><input id="p60-total" inputmode="decimal" autocomplete="off" placeholder="336"><span class="unit">kg</span></div>
+        <p class="hint">Una sola vez. Se va restando sola con cada tachada guardada.</p>
+      </div>
+      <div class="field">
+        <label for="p60-lote">Hectáreas del lote</label>
+        <div class="box"><input id="p60-lote" inputmode="decimal" autocomplete="off" placeholder="56"><span class="unit">ha</span></div>
+        <p class="hint">Una sola vez. Asume que el contador arrancó en 0 en este lote.</p>
+      </div>
+      <div class="field wide">
+        <label for="p60-queda">Semilla que queda (opcional)</label>
+        <div class="box"><input id="p60-queda" inputmode="decimal" autocomplete="off" placeholder="se calcula con el total"><span class="unit">kg</span></div>
+        <p class="hint">Con el tanque vacío: solo bolsas. Si la cargás, se usa en vez de la calculada.</p>
+      </div>
+      <p class="small wide" id="p60-usado-info"></p>
+    </div>
+  </section>
+
+  <section aria-labelledby="p60-t-res">
+    <h2 id="p60-t-res" class="sr" style="position:absolute;left:-9999px">Resultado</h2>
+    <div class="result" id="p60-result" aria-live="polite">
+      <p class="r-label">Seteá el P60</p>
+      <p class="r-big"><span class="r-num" id="p60-r-num">–</span><span class="r-unit">kg/ha</span></p>
+      <p class="r-msg" id="p60-r-msg">Cargá el seteo, la semilla usada y las hectáreas de la última tachada.</p>
+      <dl class="rows" id="p60-rows"></dl>
+    </div>
+    <p class="warn" id="p60-warn" hidden></p>
+    <div class="actions">
+      <button type="button" class="primary" id="p60-save" disabled>Guardar y nueva medición</button>
+      <button type="button" class="quiet" id="p60-clear">Limpiar</button>
+    </div>
+  </section>
+
+  <section aria-labelledby="p60-t-hist">
+    <h2 id="p60-t-hist">Mediciones guardadas</h2>
+    <p class="empty" id="p60-hist-empty">Todavía no hay ninguna. Al guardar una, se suma al promedio del factor.</p>
+    <table id="p60-hist-table" hidden>
+      <thead><tr><th>Medición</th><th>Seteo</th><th>Real</th><th>Factor</th></tr></thead>
+      <tbody id="p60-hist-body"></tbody>
+    </table>
+    <p class="avg" id="p60-avg" hidden></p>
+    <button type="button" class="quiet" id="p60-wipe" hidden>Borrar historial</button>
+  </section>
+
+  <section aria-labelledby="p60-t-start">
+    <h2 id="p60-t-start">Seteo de arranque</h2>
+    <div class="grid">
+      <div class="field">
+        <label for="p60-a-objetivo">Dosis objetivo</label>
+        <div class="box"><input id="p60-a-objetivo" inputmode="decimal" autocomplete="off" placeholder="6"><span class="unit">kg/ha</span></div>
+      </div>
+      <div class="field">
+        <label for="p60-a-factor">Factor del dron</label>
+        <div class="box"><input id="p60-a-factor" inputmode="decimal" autocomplete="off" placeholder="auto"></div>
+      </div>
+    </div>
+    <p class="start-out" id="p60-start-out"></p>
+    <p class="small" id="p60-start-note"></p>
+  </section>
+  </div>
 
   <details>
     <summary>Cómo calcula</summary>
@@ -275,20 +393,24 @@
       <li>Semilla que queda = total del lote − semilla usada en las tachadas guardadas − la de esta tachada. Si la cargás a mano, usa esa. Si arrancás con la app a mitad de lote, poné en el total lo que tenías al empezar esa tachada.</li>
       <li>Si hay semilla que queda y hectáreas del lote, la dosis sale de dividirlas (semilla ÷ hectáreas que faltan) y el seteo te da justo. Si no, usa la dosis objetivo.</li>
       <li>La referencia puede ser una bolsa, un bolsón o cualquier cantidad: importa cuántos kg usaste y cuántas ha rindieron.</li>
-      <li>El factor cambia con cada semilla o producto, así que borrá el historial cuando cambies.</li>
+      <li>Cada dron (P150 y P60) tiene su propio factor, historial, lote y semilla usada. No se mezclan.</li>
+      <li>El factor cambia con cada semilla o producto, así que borrá el historial del dron cuando cambies.</li>
     </ul>
   </details>
 </main>
 
 <script>
-(function () {
-  var DEFAULT_FACTOR = 0.83;
-  var KEY = 'seteo-dron-historial-v1';
-  var FKEY = 'seteo-dron-form-v1';
+function initDrone(P, DEFAULT_FACTOR, KEY, FKEY, LEGACY) {
+  try {
+    if (LEGACY) {
+      if (localStorage.getItem(KEY) === null && localStorage.getItem(LEGACY.hist) !== null) localStorage.setItem(KEY, localStorage.getItem(LEGACY.hist));
+      if (localStorage.getItem(FKEY) === null && localStorage.getItem(LEGACY.form) !== null) localStorage.setItem(FKEY, localStorage.getItem(LEGACY.form));
+    }
+  } catch (e) {}
   var FIELDS = ['seteo', 'gastado', 'antes', 'contador', 'rindio', 'objetivo', 'queda', 'lote', 'total'];
   var usadoPrev = 0;
 
-  function $(id) { return document.getElementById(id); }
+  function $(id) { return document.getElementById(P + '-' + id); }
   function num(v) {
     var n = parseFloat(String(v).trim().replace(',', '.'));
     return isFinite(n) ? n : NaN;
@@ -515,7 +637,7 @@
     if (!(f > 0)) {
       var af = avgFactor();
       if (af) { f = af; origen = 'promedio de tus mediciones guardadas'; }
-      else { f = DEFAULT_FACTOR; origen = 'valor por defecto, sin mediciones guardadas'; }
+      else { f = DEFAULT_FACTOR; origen = DEFAULT_FACTOR === 1 ? 'sin medir todavía: no corrige nada hasta que guardes una medición' : 'valor por defecto, sin mediciones guardadas'; }
     } else {
       origen = 'el que cargaste';
     }
@@ -571,6 +693,39 @@
 
   loadForm();
   renderAll();
+}
+
+initDrone('p150', 0.83, 'seteo-dron-p150-hist-v1', 'seteo-dron-p150-form-v1',
+  { hist: 'seteo-dron-historial-v1', form: 'seteo-dron-form-v1' });
+initDrone('p60', 1.0, 'seteo-dron-p60-hist-v1', 'seteo-dron-p60-form-v1', null);
+
+(function () {
+  var TKEY = 'seteo-dron-tab-v1';
+  var names = ['p150', 'p60'];
+  function select(n, focus) {
+    names.forEach(function (x) {
+      var on = x === n;
+      var t = document.getElementById('tab-' + x);
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById('panel-' + x).hidden = !on;
+      if (on && focus) t.focus();
+    });
+    try { localStorage.setItem(TKEY, n); } catch (e) {}
+  }
+  names.forEach(function (x, i) {
+    var t = document.getElementById('tab-' + x);
+    t.addEventListener('click', function () { select(x, false); });
+    t.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        select(names[(i + 1) % names.length], true);
+      }
+    });
+  });
+  var saved = null;
+  try { saved = localStorage.getItem(TKEY); } catch (e) {}
+  if (names.indexOf(saved) > -1) select(saved, false);
 })();
 </script>
 <script>
